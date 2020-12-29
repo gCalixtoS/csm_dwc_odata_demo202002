@@ -1,0 +1,60 @@
+## Generated mta.yaml based on template version 0.4.0
+## appName = csm_dwc_odata_demo202002
+## language=nodejs; multiTenant=false
+## approuter=
+_schema-version: '3.1'
+ID: csm_dwc_odata_demo202002
+version: 1.0.0
+description: "A simple CAP project."
+parameters:
+  enable-parallel-deployments: true
+   
+build-parameters:
+  before-all:
+   - builder: custom
+     commands:
+      - npm install --production
+      - npx -p @sap/cds-dk cds build --production
+
+modules:
+ # --------------------- SERVER MODULE ------------------------
+ - name: csm_dwc_odata_demo202002-srv
+ # ------------------------------------------------------------
+   type: nodejs
+   path: gen/srv
+   requires:
+    # Resources extracted from CAP configuration
+    - name: csm_dwc_odata_demo202002-db
+   provides:
+    - name: srv-api      # required by consumers of CAP services (e.g. approuter)
+      properties:
+        srv-url: ${default-url}
+
+ # -------------------- SIDECAR MODULE ------------------------
+ - name: csm_dwc_odata_demo202002-db-deployer
+ # ------------------------------------------------------------
+   type: hdb
+   path: gen/db  
+   parameters:
+     buildpack: nodejs_buildpack
+   requires:
+    # 'hana' and 'xsuaa' resources extracted from CAP configuration
+    - name: csm_dwc_odata_demo202002-db
+
+
+resources:
+ # services extracted from CAP configuration
+ # 'service-plan' can be configured via 'cds.requires.<name>.vcap.plan'
+# ------------------------------------------------------------
+ - name: csm_dwc_odata_demo202002-db
+# ------------------------------------------------------------
+   type: com.sap.xs.hdi-container
+   parameters:
+     service: hana  # or 'hanatrial' on trial landscapes
+     service-plan: hdi-shared
+     config:
+        schema: CSM_DWC_ODATA_DEMO202002
+        database_id: 9ee99a70-9d98-481d-ab94-00b0417b66c5
+   properties:
+     hdi-service-name: ${service-name}
+
